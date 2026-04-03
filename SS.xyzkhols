@@ -1,5 +1,3 @@
--- This script was generated using the MoonVeil Obfuscator v1.4.5 [https://moonveil.cc]
-
 local i_,t_,Oa,U,mb,fa_=pairs,getmetatable,type,bit32.bxor
 local ia=(select)
 local Lb=(function(...)
