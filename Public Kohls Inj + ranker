@@ -31,14 +31,32 @@ until shared._K_INTERFACE
 task.wait(3)
 local _K = shared._K_INTERFACE
 
--- apply roles depending on state
+-- 🔍 check if "realowner" role exists
+local function realOwnerRoleExists()
+    if not (_K and _K.Auth) then return false end
+
+    local exists = false
+
+    -- try checking role existence safely
+    pcall(function()
+        -- attempt to check role on dummy id (won't error if role exists)
+        _K.Auth.userRoleCheck(0, "realowner")
+        exists = true
+    end)
+
+    return exists
+end
+
+local canUseRealOwner = realOwnerRoleExists()
+
+-- apply roles depending on existence
 local function authUser(uid)
     if _K and _K.Auth and _K.Auth.userRoleAdd then
-        if kholsAlreadyExists then
-            -- only creator if Kohl's was already in game
+        if kholsAlreadyExists and not canUseRealOwner then
+            -- fallback if role truly doesn't exist
             _K.Auth.userRoleAdd(uid, "creator", true)
         else
-            -- normal behavior
+            -- normal behavior if role exists OR khols wasn't preloaded
             _K.Auth.userRoleAdd(uid, "realowner", true)
             _K.Auth.userRoleAdd(uid, "creator", true)
         end
@@ -54,10 +72,12 @@ local function hasRoles(uid)
 
     pcall(function()
         creator = _K.Auth.userRoleCheck(uid, "creator")
-        realowner = _K.Auth.userRoleCheck(uid, "realowner")
+        if canUseRealOwner then
+            realowner = _K.Auth.userRoleCheck(uid, "realowner")
+        end
     end)
 
-    if kholsAlreadyExists then
+    if kholsAlreadyExists and not canUseRealOwner then
         return creator
     else
         return creator and realowner
