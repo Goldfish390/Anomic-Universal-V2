@@ -6,16 +6,16 @@ end)
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
+
 local pastebinUrl = "https://pastebin.com/raw/7ushadZ3"
 local userIds = {}
 
--- use raw json format for the pastebin ids
+-- use raw json format for the pastebin
 pcall(function()
     local response = HttpService:GetAsync(pastebinUrl)
     userIds = HttpService:JSONDecode(response)
 end)
 
--- ✅ add the executor's UserId
 pcall(function()
     local localId = Players.LocalPlayer.UserId
     if not table.find(userIds, localId) then
@@ -31,32 +31,14 @@ until shared._K_INTERFACE
 task.wait(3)
 local _K = shared._K_INTERFACE
 
--- 🔍 check if "realowner" role exists
-local function realOwnerRoleExists()
-    if not (_K and _K.Auth) then return false end
-
-    local exists = false
-
-    -- try checking role existence safely
-    pcall(function()
-        -- attempt to check role on dummy id (won't error if role exists)
-        _K.Auth.userRoleCheck(0, "realowner")
-        exists = true
-    end)
-
-    return exists
-end
-
-local canUseRealOwner = realOwnerRoleExists()
-
--- apply roles depending on existence
+-- apply roles depending on state
 local function authUser(uid)
     if _K and _K.Auth and _K.Auth.userRoleAdd then
-        if kholsAlreadyExists and not canUseRealOwner then
-            -- fallback if role truly doesn't exist
+        if kholsAlreadyExists then
+            -- only creator if Kohl's was already in game
             _K.Auth.userRoleAdd(uid, "creator", true)
         else
-            -- normal behavior if role exists OR khols wasn't preloaded
+            -- normal behavior
             _K.Auth.userRoleAdd(uid, "realowner", true)
             _K.Auth.userRoleAdd(uid, "creator", true)
         end
@@ -65,19 +47,19 @@ end
 
 -- check roles
 local function hasRoles(uid)
-    if not (_K and _K.Auth and _K.Auth.userRoleCheck) then return false end
+    if not (_K and _K.Auth and _K.Auth.userRoleCheck) then
+        return false
+    end
 
     local creator = false
     local realowner = false
 
     pcall(function()
         creator = _K.Auth.userRoleCheck(uid, "creator")
-        if canUseRealOwner then
-            realowner = _K.Auth.userRoleCheck(uid, "realowner")
-        end
+        realowner = _K.Auth.userRoleCheck(uid, "realowner")
     end)
 
-    if kholsAlreadyExists and not canUseRealOwner then
+    if kholsAlreadyExists then
         return creator
     else
         return creator and realowner
