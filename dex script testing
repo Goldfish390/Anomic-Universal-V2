@@ -1,5 +1,16 @@
 -- Server console loader for LocalPlayer
--- Assumes your server console already defines `LocalPlayer`
+-- Uses a pre-defined `LocalPlayer` if your server console provides one,
+-- otherwise falls back to resolving by the current LocalPlayer name when available.
+
+local LocalPlayer = rawget(_G, "LocalPlayer") or LocalPlayer
+
+if typeof(LocalPlayer) == "string" then
+    LocalPlayer = game.Players:FindFirstChild(LocalPlayer)
+end
+
+if (not LocalPlayer or not LocalPlayer:IsA("Player")) and game.Players.LocalPlayer then
+    LocalPlayer = game.Players:FindFirstChild(game.Players.LocalPlayer.Name)
+end
 
 if not LocalPlayer or not LocalPlayer:IsA("Player") then
     warn("LocalPlayer not defined or invalid")
@@ -119,7 +130,17 @@ local service = setmetatable({},{__index = function(self,name)
 	self[name] = serv
 	return serv
 end})
-local plr = service.Players.LocalPlayer or service.Players.PlayerAdded:wait()
+local LocalPlayer = rawget(_G, "LocalPlayer") or service.Players.LocalPlayer
+
+if typeof(LocalPlayer) == "string" then
+	LocalPlayer = service.Players:FindFirstChild(LocalPlayer)
+end
+
+if (not LocalPlayer or not LocalPlayer:IsA("Player")) and service.Players.LocalPlayer then
+	LocalPlayer = service.Players:FindFirstChild(service.Players.LocalPlayer.Name)
+end
+
+local plr = LocalPlayer or service.Players.PlayerAdded:Wait()
 
 
 local OneUI = {
